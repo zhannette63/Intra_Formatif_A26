@@ -27,21 +27,69 @@ export default function Home() {
     .build();
 
     // TODO: Mettre isConnected à true seulement une fois que la connection au Hub est faite
-    setIsConnected(true);
+    
+newHubConnection.on(
+      "UpdateNbUsers",(nbUsers: number) => {
+        setUserCount(nbUsers);
+      }
+    );
+      newHubConnection.on('ReceiveChoice',(choice: number, price: number, nb: number, moneyValue: number)=>{
+     setSelectedChoice(choice);
+     setPizzaPrice(price);
+     setNbPizzas(nb);
+     setMoney(moneyValue);
+      
+    });
+     newHubConnection.on('UpdateMoney',(choice: number, moneyValue: number)=>{
+       setMoney(moneyValue);
+    });
+     newHubConnection.on('UpdateNbPizzasAndMoney',(choice: number, nb: number, moneyValue: number)=>{
+       setNbPizzas(nb);
+       setMoney(moneyValue);
+      
+    });
+     newHubConnection.on(
+      "UpdatePizzaPrice",
+      (choice: number, price: number) => {
+        setPizzaPrice(price);
+      }
+    );
+     newHubConnection.on('ReceiveBuyPizza',(choice: number)=>{
+       setSelectedChoice(choice);
+    });
+  
+     newHubConnection
+      .start()
+      .then(() => {
+       setIsConnected(true);
+
+      })
+      .catch(err => console.log('Error while starting connection: ' + err))
+
+    setHubConnection(newHubConnection);
   }
 
   function selectChoice(selectedChoice:number) {
     setSelectedChoice(selectedChoice);
+    hubConnection!.invoke('SelectChoice',selectedChoice)
+  
   }
 
   function unselectChoice() {
+     hubConnection!.invoke('UnselectChoice',selectedChoice)
     setSelectedChoice(-1);
+     setPizzaPrice(0);
+    setMoney(0);
+    setNbPizzas(0);
+    
   }
 
   function addMoney() {
+     hubConnection!.invoke('AddMoney',selectedChoice)
   }
 
   function buyPizza() {
+      hubConnection!.invoke('BuyPizza',selectedChoice)
   }
 
   return (
